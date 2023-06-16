@@ -24,7 +24,7 @@ module.exports = {
   },
 
   async UserRegister(req, res) {
-    const { name, email, password, confirm_password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
       if (!name) {
@@ -37,10 +37,6 @@ module.exports = {
         return res
           .status(422)
           .json({ message: "The password field is required" });
-      }
-
-      if (password !== confirm_password) {
-        return res.status(422).json({ message: "Passwords must be the same" });
       }
 
       const emailExists = await User.findOne({ where: { email: email } });
@@ -99,10 +95,17 @@ module.exports = {
 
       const token = jwt.sign({ id: user.id }, secret);
 
-      res.status(200).json({
-        message: "Authentication performed successfully",
+      newUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
         token: token,
-      });
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        message: "Authentication performed successfully",
+      };
+
+      res.status(200).json({ user: newUser });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal server error" });
@@ -121,7 +124,7 @@ module.exports = {
       const secret = process.env.SECRET;
 
       jwt.verify(token, secret);
-      
+
       next();
     } catch (error) {
       console.log(error);
